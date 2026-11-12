@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111317">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Music Vault">
+<title>Music Vault</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Sign in ─────────────────────────────────────────────────────────── -->
+<section id="signin" class="screen center" hidden>
+  <div class="signin-card">
+    <h1>Music Vault</h1>
+    <p class="muted">This page holds no data. It reads your private collection
+      using a token you provide, stored only on this device.</p>
+
+    <label>GitHub user
+      <input id="in-owner" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="daebhid">
+    </label>
+    <label>Private data repo
+      <input id="in-repo" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="music-vault-data">
+    </label>
+    <label>Access token
+      <input id="in-token" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="github_pat_...">
+    </label>
+
+    <button id="btn-signin" class="primary">Sign in</button>
+    <p id="signin-error" class="error" hidden></p>
+
+    <details>
+      <summary>How to make a token</summary>
+      <ol>
+        <li>GitHub → Settings → Developer settings → Personal access tokens →
+          <b>Fine-grained tokens</b></li>
+        <li><b>Generate new token</b> (or edit your Movie Vault one and add this repo)</li>
+        <li>Expiration: <b>No expiration</b> (so you never sign in again)</li>
+        <li>Repository access: <b>Only select repositories</b> → your data repo</li>
+        <li>Permissions → Repository permissions → <b>Contents: Read and write</b></li>
+        <li>Generate, copy, paste it above</li>
+      </ol>
+      <p class="muted">If the phone is ever lost, revoke it on that same page and
+        it is dead immediately.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ── Collection ──────────────────────────────────────────────────────── -->
+<section id="library" class="screen" hidden>
+  <header class="topbar">
+    <div class="searchrow">
+      <input id="search" type="search" placeholder="Search albums, artists, labels…" autocapitalize="off" autocorrect="off">
+      <button id="btn-filters" class="icon" aria-label="Filters">☰</button>
+      <button id="btn-random" class="icon" aria-label="Random album">🎲</button>
+      <button id="btn-add" class="icon" aria-label="Add album">＋</button>
+    </div>
+    <div class="tabs">
+      <button class="tab" data-view="library">Library<span class="n" id="n-library"></span></button>
+      <button class="tab" data-view="shopping">Shopping list<span class="n" id="n-shopping"></span></button>
+    </div>
+    <div id="filters" class="filters" hidden></div>
+    <div id="active" class="active" hidden></div>
+    <div class="statusrow">
+      <span id="count" class="muted"></span>
+      <span id="sync" class="sync"></span>
+    </div>
+  </header>
+  <div id="grid" class="grid"></div>
+  <p id="empty" class="empty muted" hidden>Nothing matches.</p>
+</section>
+
+<!-- ── Album detail ────────────────────────────────────────────────────── -->
+<section id="detail" class="screen sheet" hidden></section>
+
+<!-- ── Add album ───────────────────────────────────────────────────────── -->
+<section id="addalbum" class="screen sheet" hidden></section>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="frontmatter.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

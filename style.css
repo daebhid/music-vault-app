@@ -1,0 +1,280 @@
+/* Music Vault — phone first. Everything is sized for a thumb. Built from Movie Vault. */
+
+:root {
+  --bg: #111317;
+  --panel: #1a1d23;
+  --panel-2: #232730;
+  --line: #2e333d;
+  --text: #e9ecf1;
+  --muted: #98a0ad;
+  --accent: #e0b341;
+  --danger: #e2564a;
+  --ok: #57b87b;
+  --radius: 10px;
+  --tap: 44px;               /* minimum comfortable tap target */
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior-y: none;
+}
+
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+.screen[hidden] { display: none !important; }
+.center { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+.muted { color: var(--muted); }
+.error { color: var(--danger); }
+
+/* ── Sign in ───────────────────────────────────────────────────────────── */
+.signin-card { width: min(420px, 100%); }
+.signin-card h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.01em; }
+.signin-card p { margin: 0 0 18px; font-size: 14px; }
+.signin-card label { display: block; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+.signin-card input {
+  display: block; width: 100%; margin-top: 5px; padding: 12px;
+  min-height: var(--tap);
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  font-size: 16px;                      /* 16px stops iOS zooming on focus */
+}
+details { margin-top: 20px; font-size: 13px; color: var(--muted); }
+details summary { cursor: pointer; min-height: var(--tap); line-height: var(--tap); }
+details ol { padding-left: 18px; }
+details li { margin-bottom: 6px; }
+
+button {
+  font: inherit; color: var(--text); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  min-height: var(--tap); padding: 0 14px; cursor: pointer;
+}
+button.primary { width: 100%; background: var(--accent); color: #201a08; border-color: transparent; font-weight: 600; }
+button.icon { min-width: var(--tap); padding: 0; font-size: 20px; flex: 0 0 auto; }
+button:disabled { opacity: .5; }
+
+/* ── Top bar ───────────────────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 10px 6px;
+}
+.searchrow { display: flex; gap: 8px; }
+.searchrow input {
+  flex: 1 1 auto; min-width: 0; padding: 0 12px; min-height: var(--tap);
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius); font-size: 16px;
+}
+.statusrow { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px 2px 0; }
+.sync { font-size: 12px; }
+.sync.saving { color: var(--accent); }
+.sync.saved  { color: var(--ok); }
+.sync.failed { color: var(--danger); }
+
+/* ── Filters ───────────────────────────────────────────────────────────── */
+.filters { padding: 10px 0 2px; max-height: 45dvh; overflow-y: auto; }
+.filters h4 { margin: 10px 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 7px 11px; min-height: 34px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 999px; font-size: 13px; color: var(--text); cursor: pointer;
+}
+.chip.on { background: var(--accent); color: #201a08; border-color: transparent; font-weight: 600; }
+.chip.warn { border-color: var(--danger); color: var(--danger); }
+
+/* ── Active filter pills ──────────────────────────────────── */
+.active { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 2px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 9px; min-height: 32px;
+  background: var(--accent); color: #201a08; border: none;
+  border-radius: 999px; font-size: 13px; font-weight: 600;
+}
+.pill-key { font-weight: 500; opacity: .65; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.pill-x { opacity: .55; font-size: 11px; }
+
+/* Credits in the detail sheet — tappable when the collection holds more. */
+.credit {
+  display: inline; padding: 0; min-height: 0;
+  background: none; border: none; border-radius: 0;
+  font: inherit; color: var(--accent); text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+/* ── Grid ──────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid; gap: 10px; padding: 12px 10px 40px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (min-width: 560px)  { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 820px)  { .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+
+.card { cursor: pointer; min-width: 0; }
+.poster {
+  position: relative; width: 100%; aspect-ratio: 1 / 1;      /* album covers are square */
+  background: var(--panel); border-radius: 8px; overflow: hidden;
+}
+.poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.poster .fallback {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  padding: 8px; font-size: 11px; text-align: center; color: var(--muted);
+}
+.badge {
+  position: absolute; right: 4px; bottom: 4px;
+  background: rgba(0,0,0,.72); color: var(--accent);
+  border-radius: 5px; padding: 1px 5px; font-size: 11px; font-weight: 600;
+}
+.card h3 { margin: 5px 0 0; font-size: 11.5px; font-weight: 500; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card .yr { font-size: 10.5px; color: var(--muted); }
+.empty { text-align: center; padding: 40px 20px; }
+
+/* ── Sheets (detail / add) ─────────────────────────────────────────────── */
+.sheet {
+  position: fixed; inset: 0; z-index: 40;
+  background: var(--bg); overflow-y: auto;
+  padding: 0 0 60px;
+}
+.sheet-head {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: 10px;
+  /* A fixed sheet escapes the body's safe-area padding, so it pads itself —
+     otherwise the close button sits under the phone's clock and battery. */
+  padding: calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right))
+           8px calc(10px + env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+.sheet-head h2 { flex: 1; margin: 0; font-size: 16px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unwatched { display: flex; align-items: center; gap: 6px; flex: 0 0 auto;
+  min-height: var(--tap); font-size: 13px; color: var(--muted); cursor: pointer; }
+.unwatched input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+/* Full width on a phone; capped on a desktop so text stays readable. */
+.sheet-body { padding: 14px; max-width: 760px; margin: 0 auto; }
+
+/* align-items must not be `stretch`: the poster would be pulled to the height of
+   the metadata column, overriding its aspect-ratio and cropping it to a sliver. */
+.hero { display: flex; gap: 14px; margin-bottom: 18px; align-items: flex-start; }
+.hero .poster { width: 116px; flex: 0 0 116px; }
+@media (min-width: 700px) { .hero .poster { width: 170px; flex: 0 0 170px; } }
+.hero-meta { min-width: 0; }
+.hero-meta h1 { margin: 0 0 3px; font-size: 20px; line-height: 1.2; }
+.hero-meta .sub { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.hero-meta dl { margin: 0; font-size: 12.5px; }
+.hero-meta dt { color: var(--muted); margin-top: 6px; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .05em; }
+.hero-meta dd { margin: 1px 0 0; line-height: 1.85; }   /* room to hit a credit */
+
+.field { margin-bottom: 20px; }
+.field > label, .field > h4 {
+  display: block; margin: 0 0 7px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+}
+.field textarea, .field input[type=text], .field input[type=number], .field select {
+  width: 100%; padding: 11px; min-height: var(--tap);
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  font: inherit; font-size: 16px;
+}
+.field textarea { min-height: 150px; resize: vertical; line-height: 1.5; }
+.row-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+/* Stars — tap the left or right half for half-point ratings. */
+.stars { display: flex; align-items: center; gap: 2px; }
+.star { position: relative; width: 34px; height: 34px; flex: 0 0 auto; }
+.star .half { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 2; cursor: pointer; }
+.star .half.l { left: 0; } .star .half.r { right: 0; }
+.star svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.star .fill { color: var(--accent); }
+.star .empty-s { color: #3a4049; }
+.rating-clear { margin-left: 10px; font-size: 12px; color: var(--muted);
+  background: none; border: none; min-height: var(--tap); padding: 0 6px; }
+
+/* Type-ahead */
+.typeahead { position: relative; }
+.typeahead-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius); overflow: hidden; max-height: 240px; overflow-y: auto;
+}
+.typeahead-list div { padding: 12px; min-height: var(--tap); border-bottom: 1px solid var(--line); cursor: pointer; }
+.typeahead-list div:last-child { border-bottom: none; }
+.typeahead-list div.new { color: var(--accent); }
+.typeahead-list div.banned { color: var(--danger); cursor: not-allowed; }
+.current-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+
+/* Add-film form */
+.form-grid { display: grid; gap: 14px; }
+.hint { font-size: 12px; color: var(--muted); margin: 5px 0 0; }
+.filename { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--accent); }
+#poster-preview { max-width: 120px; border-radius: 8px; margin-top: 8px; display: block; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%); z-index: 100;
+  background: var(--panel-2); border: 1px solid var(--line);
+  padding: 11px 16px; border-radius: 999px; font-size: 14px;
+  max-width: 90vw; text-align: center;
+}
+.toast.bad { border-color: var(--danger); color: var(--danger); }
+.toast.good { border-color: var(--ok); }
+
+/* The full approved list under the genre box — a reminder of what exists, so
+   the vocabulary does not have to be held in your head. The film's own genre
+   is bolded so it can be picked out of the run of text at a glance. */
+.approved-list { line-height: 1.7; }
+.approved-list b { color: var(--text); font-weight: 600; }
+
+/* One row per physical disc: what it is, and where it lives. */
+.copy { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.copy:last-child { border-bottom: 0; }
+.copy-what { font-size: 13px; margin-bottom: 6px; }
+
+/* ── Music Vault additions ─────────────────────────────────────────────── */
+
+/* Library / Shopping list switch */
+.tabs { display: flex; gap: 6px; margin-top: 8px; }
+.tab { flex: 1; min-height: 38px; font-size: 14px; background: var(--panel); }
+.tab.on { background: var(--accent); color: #201a08; border-color: transparent; font-weight: 600; }
+.tab .n { opacity: .6; font-weight: 500; margin-left: 4px; }
+
+.card .artist { font-size: 10.5px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); margin-top: 6px; }
+.status-tag.shopping { color: var(--accent); border-color: var(--accent); }
+
+/* Tracklist */
+.tracks { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.tracks li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.tracks li:last-child { border-bottom: 0; }
+.tracks .no { width: 22px; flex: 0 0 22px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tracks .t { flex: 1; min-width: 0; }
+.tracks .len { color: var(--muted); font-variant-numeric: tabular-nums; }
+.disc-head { margin: 12px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+/* MusicBrainz search results */
+.results { display: grid; gap: 8px; margin-top: 10px; }
+.result { display: flex; gap: 10px; align-items: center; text-align: left; padding: 8px; width: 100%; min-height: 72px; }
+.result img, .result .noart { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 6px; object-fit: cover; background: var(--panel); }
+.result .r-meta { min-width: 0; font-size: 14px; }
+.result .r-meta .muted { font-size: 12px; }
+.searchpair { display: grid; gap: 8px; }
+.dest { display: flex; gap: 6px; }
+.dest .chip { flex: 1; text-align: center; }
+button.secondary { width: 100%; }
+button.danger { width: 100%; color: var(--danger); border-color: var(--danger); background: none; }
+#art-preview { max-width: 140px; border-radius: 8px; margin-top: 8px; display: block; }
+.move-box { padding: 12px; border: 1px solid var(--accent); border-radius: var(--radius); }
