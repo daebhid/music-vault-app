@@ -278,17 +278,28 @@ async function shrinkToJpegB64(blob) {
 
 /* ── MusicBrainz + Cover Art Archive ──────────────────────────────────── */
 
-// MusicBrainz asks for no more than one request a second.
+// MusicBrainz asks for no more than one request a second, and answers 503
+// when it is overloaded or thinks we are going too fast. That is routine on
+// their side, so wait and retry a few times before giving up.
 let mbLast = 0;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function mb(path) {
-  const wait = Math.max(0, mbLast + 1100 - Date.now());
-  if (wait) await new Promise((r) => setTimeout(r, wait));
-  mbLast = Date.now();
   const sep = path.includes('?') ? '&' : '?';
-  const res = await fetch(`${MB}/${path}${sep}fmt=json`, { headers: { Accept: 'application/json' } });
-  if (res.status === 503) throw new Error('MusicBrainz is busy — try again in a moment.');
-  if (!res.ok) throw new Error(`MusicBrainz error ${res.status}`);
-  return res.json();
+  const url = `${MB}/${path}${sep}fmt=json`;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const wait = Math.max(0, mbLast + 1200 - Date.now());
+    if (wait) await sleep(wait);
+    mbLast = Date.now();
+    let res;
+    try { res = await fetch(url, { headers: { Accept: 'application/json' } }); }
+    catch { res = null; }                        // network blip — retry
+    if (res && res.ok) return res.json();
+    if (res && res.status !== 503 && res.status !== 429) throw new Error(`MusicBrainz error ${res.status}`);
+    status(`MusicBrainz busy — retrying (${attempt + 1}/4)…`, 'saving');
+    await sleep(2000 * (attempt + 1));           // 2s, 4s, 6s, 8s
+  }
+  status('');
+  throw new Error('MusicBrainz is still busy — try again in a minute.');
 }
 
 const luceneQuote = (s) => `"${s.replace(/["\\]/g, ' ').trim()}"`;
