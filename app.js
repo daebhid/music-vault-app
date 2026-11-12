@@ -302,7 +302,7 @@ async function searchReleaseGroups(artist, title) {
   return (data['release-groups'] || []).map((g) => ({
     id: g.id,
     title: g.title,
-    artist: (g['artist-credit'] || []).map((c) => c.name + (c.joinphrase || '')).join('').trim(),
+    artist: (g['artist-credit'] || []).map((c) => (c.name || c.artist?.name || '') + (c.joinphrase || '')).join('').trim(),
     year: parseInt((g['first-release-date'] || '').slice(0, 4), 10) || null,
     type: [g['primary-type'], ...(g['secondary-types'] || [])].filter(Boolean).join(' · '),
   }));
@@ -346,7 +346,7 @@ async function releaseDetails(releaseId) {
     releaseId, tracks, label,
     discs: (r.media || []).length || 1,
     year: parseInt((r.date || '').slice(0, 4), 10) || null,
-    artist: (r['artist-credit'] || []).map((c) => c.name + (c.joinphrase || '')).join('').trim(),
+    artist: (r['artist-credit'] || []).map((c) => (c.name || c.artist?.name || '') + (c.joinphrase || '')).join('').trim(),
   };
 }
 
@@ -365,10 +365,68 @@ async function fetchCover(groupId, releaseId) {
 
 /* ── Loading the catalogue ────────────────────────────────────────────── */
 
+/**
+ * index.json is rebuilt by a GitHub Action after every commit, which takes a
+ * minute — and if the Action ever fails, the index goes stale. So the app never
+ * trusts it alone: it also lists the albums/ folder (one request) and reads any
+ * album the index doesn't know about yet, and drops any that were deleted.
+ * What you see always matches the files, whatever state the Action is in.
+ */
 async function loadCatalogue() {
-  const { text } = await readFile('index.json');
+  const [{ text }, listing] = await Promise.all([readFile('index.json'), listAlbums()]);
   const data = JSON.parse(text);
-  state.albums = data.albums || [];
+  let albums = data.albums || [];
+  if (listing) {
+    const onDisk = new Set(listing);
+    albums = albums.filter((a) => onDisk.has(a.slug));
+    const known = new Set(albums.map((a) => a.slug));
+    const missing = listing.filter((slug) => !known.has(slug));
+    const rows = await Promise.all(missing.map((slug) => readFile(`albums/${slug}.md`)
+      .then(({ text: t }) => rowFromFile(slug, t)).catch(() => null)));
+    albums = albums.concat(rows.filter(Boolean));
+    albums.sort((a, b) => String(a.artist || '').localeCompare(String(b.artist || '')) ||
+      (a.release_year || 0) - (b.release_year || 0));
+  }
+  state.albums = albums;
+}
+
+/** Slugs of every album file, or null if the folder can't be listed. */
+async function listAlbums() {
+  try {
+    const res = await fetch(contentsURL('albums'), { headers: ghHeaders(), cache: 'no-store' });
+    if (!res.ok) return null;
+    return (await res.json()).filter((f) => f.type === 'file' && f.name.endsWith('.md'))
+      .map((f) => f.name.replace(/\.md$/, ''));
+  } catch { return null; }
+}
+
+/** The same row build_index.py makes, read straight from one file. */
+function rowFromFile(slug, text) {
+  const { fm, body } = splitFile(text);
+  const num = (v) => (v != null && v !== '' && !isNaN(Number(v)) ? Number(v) : undefined);
+  const tracks = getTracks(fm);
+  const secs = tracks.reduce((n, t) => {
+    const [m, x] = String(t.length || '').split(':').map(Number);
+    return n + (m || 0) * 60 + (x || 0);
+  }, 0);
+  const row = {
+    slug,
+    title: getScalar(fm, 'title') || undefined,
+    artist: getScalar(fm, 'artist') || undefined,
+    status: getScalar(fm, 'status') || 'library',
+    release_year: num(getScalar(fm, 'release_year')),
+    label: getScalar(fm, 'label') || undefined,
+    quality: getScalar(fm, 'quality') || undefined,
+    rating: num(getScalar(fm, 'rating')) ?? null,
+    discs: num(getScalar(fm, 'discs')),
+    track_count: tracks.length,
+  };
+  const formats = getList(fm, 'formats'); if (formats.length) row.formats = formats;
+  const genres = getList(fm, 'genres'); if (genres.length) row.genres = genres;
+  const art = getScalar(fm, 'artwork'); if (art) row.artwork = art.split('/').pop();
+  if (secs) row.total_length = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  if (body.trim()) row.has_notes = true;
+  return row;
 }
 
 /* ── Filtering ────────────────────────────────────────────────────────── */
@@ -1108,12 +1166,21 @@ async function submitNewAlbum() {
     ...renderTracks(d.tracks || []),
   ].join('\n');
 
+  // Not isNew: if an earlier tap got the file onto GitHub before failing (or a
+  // double tap), GitHub refuses a second create without the file's version id.
+  // writeFile looks that id up, so a retry simply finishes the job.
+  const btn = el('a-save');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
   const ok = await save('Adding album', async () => {
-    await writeFile(`albums/${slug}.md`, joinFile(fm, ''), `Add ${artist} — ${title} to ${dest === 'library' ? 'library' : 'shopping list'}`, { isNew: true });
+    await writeFile(`albums/${slug}.md`, joinFile(fm, ''), `Add ${artist} — ${title} to ${dest === 'library' ? 'library' : 'shopping list'}`);
     if (hasArt) {
-      await writeFile(`artwork/${slug}.jpg`, null, `Cover for ${artist} — ${title}`, { isNew: true, base64: draft.artB64 });
+      await writeFile(`artwork/${slug}.jpg`, null, `Cover for ${artist} — ${title}`, { base64: draft.artB64 });
+      await forgetArt(`${slug}.jpg`);
     }
   });
+  btn.disabled = false;
+  btn.textContent = 'Add album';
 
   if (ok) {
     const totalSec = (d.tracks || []).reduce((s, t) => {
